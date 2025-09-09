@@ -1,0 +1,341 @@
+{
+  "info": {
+    "name": "Smart API Gateway",
+    "description": "API Gateway for Dynamic Recipe Fetcher with JWT Authentication",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set('jwt_token', responseJson.token);",
+                  "    pm.test('User registered successfully', function () {",
+                  "        pm.expect(responseJson.message).to.eql('User registered successfully');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set('jwt_token', responseJson.token);",
+                  "    pm.test('Login successful', function () {",
+                  "        pm.expect(responseJson.message).to.eql('Login successful');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recipes",
+      "item": [
+        {
+          "name": "Get Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/recipes/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "recipes", "categories"]
+            }
+          }
+        },
+        {
+          "name": "Get Random Recipe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/recipes/random",
+              "host": ["{{base_url}}"],
+              "path": ["api", "recipes", "random"]
+            }
+          }
+        },
+        {
+          "name": "Search Recipes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/recipes/search?q=chicken&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "recipes", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "chicken"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Recipes by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/recipes/category/Seafood?limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "recipes", "category", "Seafood"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Recipe by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/recipes/52874",
+              "host": ["{{base_url}}"],
+              "path": ["api", "recipes", "52874"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Favorites",
+      "item": [
+        {
+          "name": "Get Favorites",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/favorites",
+              "host": ["{{base_url}}"],
+              "path": ["api", "favorites"]
+            }
+          }
+        },
+        {
+          "name": "Add to Favorites",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/favorites/52874",
+              "host": ["{{base_url}}"],
+              "path": ["api", "favorites", "52874"]
+            }
+          }
+        },
+        {
+          "name": "Remove from Favorites",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/favorites/52874",
+              "host": ["{{base_url}}"],
+              "path": ["api", "favorites", "52874"]
+            }
+          }
+        },
+        {
+          "name": "Check Favorite Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/favorites/52874/check",
+              "host": ["{{base_url}}"],
+              "path": ["api", "favorites", "52874", "check"]
+            }
+          }
+        },
+        {
+          "name": "Get Favorite Statistics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/favorites/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "favorites", "stats"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
