@@ -17,23 +17,23 @@ const authenticateToken = async (req, res, next) => {
     if (!token) {
       return res.status(401).json({
         error: 'Access denied',
-        message: 'No token provided'
+        message: 'No token provided',
       });
     }
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Check if user still exists
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, email: true, name: true }
+      select: { id: true, email: true, name: true },
     });
 
     if (!user) {
       return res.status(401).json({
         error: 'Invalid token',
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
@@ -41,26 +41,25 @@ const authenticateToken = async (req, res, next) => {
     req.user = decoded;
     req.userInfo = user;
     next();
-
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         error: 'Invalid token',
-        message: 'Token is malformed'
+        message: 'Token is malformed',
       });
     }
 
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         error: 'Token expired',
-        message: 'Please login again'
+        message: 'Please login again',
       });
     }
 
     console.error('Auth middleware error:', error);
     return res.status(500).json({
       error: 'Authentication failed',
-      message: 'An error occurred during authentication'
+      message: 'An error occurred during authentication',
     });
   }
 };
@@ -81,10 +80,10 @@ const optionalAuth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, email: true, name: true }
+      select: { id: true, email: true, name: true },
     });
 
     if (user) {
@@ -93,7 +92,6 @@ const optionalAuth = async (req, res, next) => {
     }
 
     next();
-
   } catch (error) {
     // If token is invalid, continue without authentication
     next();
@@ -102,5 +100,5 @@ const optionalAuth = async (req, res, next) => {
 
 module.exports = {
   authenticateToken,
-  optionalAuth
+  optionalAuth,
 };

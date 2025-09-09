@@ -33,22 +33,26 @@ A Node.js Express API Gateway for dynamic recipe fetching with user authenticati
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd backend
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Setup environment variables**
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Update the `.env` file with your configuration:
+
    ```env
    DATABASE_URL="postgresql://username:password@localhost:5432/smart_api_gateway"
    JWT_SECRET="your-super-secret-jwt-key"
@@ -57,22 +61,24 @@ A Node.js Express API Gateway for dynamic recipe fetching with user authenticati
    ```
 
 4. **Setup database**
+
    ```bash
    # Generate Prisma client
    npm run db:generate
-   
+
    # Run database migrations
    npm run db:migrate
-   
+
    # Seed the database (optional)
    npm run db:seed
    ```
 
 5. **Start the server**
+
    ```bash
    # Development mode
    npm run dev
-   
+
    # Production mode
    npm start
    ```
@@ -80,11 +86,13 @@ A Node.js Express API Gateway for dynamic recipe fetching with user authenticati
 ## API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - User login
 - `GET /api/auth/profile` - Get user profile (protected)
 
 ### Recipes
+
 - `GET /api/recipes/categories` - Get recipe categories
 - `GET /api/recipes/random` - Get random recipe
 - `GET /api/recipes/search?q=term` - Search recipes
@@ -92,6 +100,7 @@ A Node.js Express API Gateway for dynamic recipe fetching with user authenticati
 - `GET /api/recipes/:id` - Get recipe details
 
 ### Favorites (Protected)
+
 - `GET /api/favorites` - Get user's favorites
 - `POST /api/favorites/:recipeId` - Add recipe to favorites
 - `DELETE /api/favorites/:recipeId` - Remove from favorites
@@ -99,6 +108,7 @@ A Node.js Express API Gateway for dynamic recipe fetching with user authenticati
 - `GET /api/favorites/stats` - Get favorite statistics
 
 ### Health Check
+
 - `GET /health` - Server health status
 
 ## Database Schema
@@ -120,7 +130,7 @@ model Favorite {
   recipeId  String
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
-  
+
   @@unique([userId, recipeId])
 }
 

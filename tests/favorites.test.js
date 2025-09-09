@@ -12,20 +12,18 @@ describe('Favorites Endpoints', () => {
   const testUser = {
     name: 'Favorites Test User',
     email: 'favtest@example.com',
-    password: 'Password123'
+    password: 'Password123',
   };
 
   beforeAll(async () => {
     // Clean up
     await prisma.favorite.deleteMany({});
     await prisma.user.deleteMany({
-      where: { email: testUser.email }
+      where: { email: testUser.email },
     });
 
     // Register and login test user
-    const registerResponse = await request(app)
-      .post('/api/auth/register')
-      .send(testUser);
+    const registerResponse = await request(app).post('/api/auth/register').send(testUser);
 
     authToken = registerResponse.body.token;
     userId = registerResponse.body.user.id;
@@ -35,7 +33,7 @@ describe('Favorites Endpoints', () => {
     // Clean up
     await prisma.favorite.deleteMany({});
     await prisma.user.deleteMany({
-      where: { email: testUser.email }
+      where: { email: testUser.email },
     });
   });
 
@@ -64,9 +62,7 @@ describe('Favorites Endpoints', () => {
     });
 
     it('should not add favorite without authentication', async () => {
-      const response = await request(app)
-        .post(`/api/favorites/${testRecipeId}`)
-        .expect(401);
+      const response = await request(app).post(`/api/favorites/${testRecipeId}`).expect(401);
 
       expect(response.body).toHaveProperty('error', 'Access denied');
     });
@@ -98,9 +94,7 @@ describe('Favorites Endpoints', () => {
     });
 
     it('should not get favorites without authentication', async () => {
-      const response = await request(app)
-        .get('/api/favorites')
-        .expect(401);
+      const response = await request(app).get('/api/favorites').expect(401);
 
       expect(response.body).toHaveProperty('error', 'Access denied');
     });
@@ -168,9 +162,7 @@ describe('Favorites Endpoints', () => {
     });
 
     it('should not remove favorite without authentication', async () => {
-      const response = await request(app)
-        .delete(`/api/favorites/${testRecipeId}`)
-        .expect(401);
+      const response = await request(app).delete(`/api/favorites/${testRecipeId}`).expect(401);
 
       expect(response.body).toHaveProperty('error', 'Access denied');
     });

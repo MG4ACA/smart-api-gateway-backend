@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Seeding database...');
-  
+
   // Create demo users
   const demoUser = await prisma.user.upsert({
     where: { email: 'demo@example.com' },
@@ -17,7 +17,7 @@ async function main() {
   });
 
   console.log('✅ Demo user created:', demoUser);
-  
+
   console.log('🌱 Seeding completed!');
 }
 

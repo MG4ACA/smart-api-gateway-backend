@@ -51,7 +51,7 @@ const validateRegistration = (req, res, next) => {
     return res.status(400).json({
       error: 'Validation failed',
       message: 'Please fix the following errors',
-      details: errors
+      details: errors,
     });
   }
 
@@ -84,7 +84,7 @@ const validateLogin = (req, res, next) => {
     return res.status(400).json({
       error: 'Validation failed',
       message: 'Please fix the following errors',
-      details: errors
+      details: errors,
     });
   }
 
@@ -103,14 +103,14 @@ const validateRecipeId = (req, res, next) => {
   if (!recipeId) {
     return res.status(400).json({
       error: 'Validation failed',
-      message: 'Recipe ID is required'
+      message: 'Recipe ID is required',
     });
   }
 
   if (typeof recipeId !== 'string' || recipeId.trim().length === 0) {
     return res.status(400).json({
       error: 'Validation failed',
-      message: 'Recipe ID must be a valid string'
+      message: 'Recipe ID must be a valid string',
     });
   }
 
@@ -129,14 +129,14 @@ const validateCategory = (req, res, next) => {
   if (!category) {
     return res.status(400).json({
       error: 'Validation failed',
-      message: 'Category is required'
+      message: 'Category is required',
     });
   }
 
   if (typeof category !== 'string' || category.trim().length === 0) {
     return res.status(400).json({
       error: 'Validation failed',
-      message: 'Category must be a valid string'
+      message: 'Category must be a valid string',
     });
   }
 
@@ -147,5 +147,5 @@ module.exports = {
   validateRegistration,
   validateLogin,
   validateRecipeId,
-  validateCategory
+  validateCategory,
 };

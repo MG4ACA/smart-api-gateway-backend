@@ -15,12 +15,12 @@ const addFavorite = asyncHandler(async (req, res) => {
 
   // Verify recipe exists by fetching from external API
   const recipe = await recipeService.fetchRecipeById(recipeId);
-  
+
   if (!recipe) {
     return res.status(404).json({
       success: false,
       error: 'Recipe not found',
-      message: 'The specified recipe does not exist'
+      message: 'The specified recipe does not exist',
     });
   }
 
@@ -32,16 +32,16 @@ const addFavorite = asyncHandler(async (req, res) => {
     where: {
       userId_recipeId: {
         userId,
-        recipeId
-      }
-    }
+        recipeId,
+      },
+    },
   });
 
   if (existingFavorite) {
     return res.status(409).json({
       success: false,
       error: 'Already in favorites',
-      message: 'This recipe is already in your favorites'
+      message: 'This recipe is already in your favorites',
     });
   }
 
@@ -49,8 +49,8 @@ const addFavorite = asyncHandler(async (req, res) => {
   const favorite = await prisma.favorite.create({
     data: {
       userId,
-      recipeId
-    }
+      recipeId,
+    },
   });
 
   res.status(201).json({
@@ -60,15 +60,15 @@ const addFavorite = asyncHandler(async (req, res) => {
       favorite: {
         id: favorite.id,
         recipeId: favorite.recipeId,
-        createdAt: favorite.createdAt
+        createdAt: favorite.createdAt,
       },
       recipe: {
         id: recipe.id,
         name: recipe.name,
         thumbnail: recipe.thumbnail,
-        category: recipe.category
-      }
-    }
+        category: recipe.category,
+      },
+    },
   });
 });
 
@@ -86,32 +86,32 @@ const removeFavorite = asyncHandler(async (req, res) => {
     where: {
       userId_recipeId: {
         userId,
-        recipeId
-      }
-    }
+        recipeId,
+      },
+    },
   });
 
   if (!favorite) {
     return res.status(404).json({
       success: false,
       error: 'Favorite not found',
-      message: 'This recipe is not in your favorites'
+      message: 'This recipe is not in your favorites',
     });
   }
 
   // Remove from favorites
   await prisma.favorite.delete({
     where: {
-      id: favorite.id
-    }
+      id: favorite.id,
+    },
   });
 
   res.status(200).json({
     success: true,
     message: 'Recipe removed from favorites',
     data: {
-      recipeId
-    }
+      recipeId,
+    },
   });
 });
 
@@ -130,11 +130,11 @@ const getFavorites = asyncHandler(async (req, res) => {
       where: { userId },
       orderBy: { createdAt: 'desc' },
       skip: parseInt(offset),
-      take: parseInt(limit)
+      take: parseInt(limit),
     }),
     prisma.favorite.count({
-      where: { userId }
-    })
+      where: { userId },
+    }),
   ]);
 
   // Fetch recipe details for each favorite
@@ -146,13 +146,15 @@ const getFavorites = asyncHandler(async (req, res) => {
           id: favorite.id,
           recipeId: favorite.recipeId,
           createdAt: favorite.createdAt,
-          recipe: recipe ? {
-            id: recipe.id,
-            name: recipe.name,
-            thumbnail: recipe.thumbnail,
-            category: recipe.category,
-            area: recipe.area
-          } : null
+          recipe: recipe
+            ? {
+                id: recipe.id,
+                name: recipe.name,
+                thumbnail: recipe.thumbnail,
+                category: recipe.category,
+                area: recipe.area,
+              }
+            : null,
         };
       } catch (error) {
         console.error(`Error fetching recipe ${favorite.recipeId}:`, error);
@@ -160,7 +162,7 @@ const getFavorites = asyncHandler(async (req, res) => {
           id: favorite.id,
           recipeId: favorite.recipeId,
           createdAt: favorite.createdAt,
-          recipe: null
+          recipe: null,
         };
       }
     })
@@ -174,9 +176,9 @@ const getFavorites = asyncHandler(async (req, res) => {
         total: totalCount,
         limit: parseInt(limit),
         offset: parseInt(offset),
-        hasMore: parseInt(offset) + parseInt(limit) < totalCount
-      }
-    }
+        hasMore: parseInt(offset) + parseInt(limit) < totalCount,
+      },
+    },
   });
 });
 
@@ -193,17 +195,17 @@ const checkFavorite = asyncHandler(async (req, res) => {
     where: {
       userId_recipeId: {
         userId,
-        recipeId
-      }
-    }
+        recipeId,
+      },
+    },
   });
 
   res.status(200).json({
     success: true,
     data: {
       isFavorite: !!favorite,
-      favoriteId: favorite?.id || null
-    }
+      favoriteId: favorite?.id || null,
+    },
   });
 });
 
@@ -217,13 +219,13 @@ const getFavoriteStats = asyncHandler(async (req, res) => {
 
   const [totalFavorites, recentFavorites] = await Promise.all([
     prisma.favorite.count({
-      where: { userId }
+      where: { userId },
     }),
     prisma.favorite.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      take: 5
-    })
+      take: 5,
+    }),
   ]);
 
   // Get categories of recent favorites
@@ -239,7 +241,7 @@ const getFavoriteStats = asyncHandler(async (req, res) => {
   );
 
   const categoryStats = recentRecipes
-    .filter(category => category !== null)
+    .filter((category) => category !== null)
     .reduce((acc, category) => {
       acc[category] = (acc[category] || 0) + 1;
       return acc;
@@ -250,8 +252,8 @@ const getFavoriteStats = asyncHandler(async (req, res) => {
     data: {
       totalFavorites,
       recentCategories: categoryStats,
-      recentCount: recentFavorites.length
-    }
+      recentCount: recentFavorites.length,
+    },
   });
 });
 
@@ -260,5 +262,5 @@ module.exports = {
   removeFavorite,
   getFavorites,
   checkFavorite,
-  getFavoriteStats
+  getFavoriteStats,
 };

@@ -24,15 +24,12 @@ describe('Auth Endpoints', () => {
   const testUser = {
     name: 'Test User',
     email: 'test@example.com',
-    password: 'Password123'
+    password: 'Password123',
   };
 
   describe('POST /api/auth/register', () => {
     it('should register a new user successfully', async () => {
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(testUser)
-        .expect(201);
+      const response = await request(app).post('/api/auth/register').send(testUser).expect(201);
 
       expect(response.body).toHaveProperty('message', 'User registered successfully');
       expect(response.body).toHaveProperty('user');
@@ -46,7 +43,7 @@ describe('Auth Endpoints', () => {
         .post('/api/auth/register')
         .send({
           ...testUser,
-          email: 'invalid-email'
+          email: 'invalid-email',
         })
         .expect(400);
 
@@ -59,7 +56,7 @@ describe('Auth Endpoints', () => {
         .send({
           ...testUser,
           email: 'test2@example.com',
-          password: '123'
+          password: '123',
         })
         .expect(400);
 
@@ -67,10 +64,7 @@ describe('Auth Endpoints', () => {
     });
 
     it('should not register duplicate user', async () => {
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(testUser)
-        .expect(409);
+      const response = await request(app).post('/api/auth/register').send(testUser).expect(409);
 
       expect(response.body).toHaveProperty('error', 'User already exists');
     });
@@ -82,7 +76,7 @@ describe('Auth Endpoints', () => {
         .post('/api/auth/login')
         .send({
           email: testUser.email,
-          password: testUser.password
+          password: testUser.password,
         })
         .expect(200);
 
@@ -97,7 +91,7 @@ describe('Auth Endpoints', () => {
         .post('/api/auth/login')
         .send({
           email: testUser.email,
-          password: 'wrongpassword'
+          password: 'wrongpassword',
         })
         .expect(401);
 
@@ -109,7 +103,7 @@ describe('Auth Endpoints', () => {
         .post('/api/auth/login')
         .send({
           email: 'nonexistent@example.com',
-          password: testUser.password
+          password: testUser.password,
         })
         .expect(401);
 
@@ -121,12 +115,10 @@ describe('Auth Endpoints', () => {
     let authToken;
 
     beforeAll(async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: testUser.email,
-          password: testUser.password
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: testUser.email,
+        password: testUser.password,
+      });
       authToken = response.body.token;
     });
 
@@ -142,9 +134,7 @@ describe('Auth Endpoints', () => {
     });
 
     it('should not get profile without token', async () => {
-      const response = await request(app)
-        .get('/api/auth/profile')
-        .expect(401);
+      const response = await request(app).get('/api/auth/profile').expect(401);
 
       expect(response.body).toHaveProperty('error', 'Access denied');
     });

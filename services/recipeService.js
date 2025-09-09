@@ -17,7 +17,7 @@ class RecipeService {
   async fetchRecipeById(recipeId) {
     try {
       const response = await axios.get(`${this.baseURL}/lookup.php?i=${recipeId}`);
-      
+
       if (!response.data.meals || response.data.meals.length === 0) {
         return null;
       }
@@ -38,16 +38,16 @@ class RecipeService {
   async fetchRecipesByCategory(category) {
     try {
       const response = await axios.get(`${this.baseURL}/filter.php?c=${category}`);
-      
+
       if (!response.data.meals || response.data.meals.length === 0) {
         return [];
       }
 
-      return response.data.meals.map(meal => ({
+      return response.data.meals.map((meal) => ({
         id: meal.idMeal,
         name: meal.strMeal,
         thumbnail: meal.strMealThumb,
-        category: category
+        category: category,
       }));
     } catch (error) {
       console.error('Error fetching recipes by category:', error);
@@ -63,12 +63,12 @@ class RecipeService {
   async searchRecipes(searchTerm) {
     try {
       const response = await axios.get(`${this.baseURL}/search.php?s=${searchTerm}`);
-      
+
       if (!response.data.meals || response.data.meals.length === 0) {
         return [];
       }
 
-      return response.data.meals.map(meal => this.transformMealData(meal));
+      return response.data.meals.map((meal) => this.transformMealData(meal));
     } catch (error) {
       console.error('Error searching recipes:', error);
       throw new Error('Failed to search recipes from external API');
@@ -82,16 +82,16 @@ class RecipeService {
   async getCategories() {
     try {
       const response = await axios.get(`${this.baseURL}/categories.php`);
-      
+
       if (!response.data.categories) {
         return [];
       }
 
-      return response.data.categories.map(category => ({
+      return response.data.categories.map((category) => ({
         id: category.idCategory,
         name: category.strCategory,
         thumbnail: category.strCategoryThumb,
-        description: category.strCategoryDescription
+        description: category.strCategoryDescription,
       }));
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -106,7 +106,7 @@ class RecipeService {
   async getRandomRecipe() {
     try {
       const response = await axios.get(`${this.baseURL}/random.php`);
-      
+
       if (!response.data.meals || response.data.meals.length === 0) {
         return null;
       }
@@ -128,7 +128,7 @@ class RecipeService {
     try {
       // Check cache first
       const cachedRecipe = await prisma.recipe.findUnique({
-        where: { externalId: recipeId }
+        where: { externalId: recipeId },
       });
 
       // If cached and not expired, return cached data
@@ -138,7 +138,7 @@ class RecipeService {
 
       // Fetch from external API
       const recipeData = await this.fetchRecipeById(recipeId);
-      
+
       if (!recipeData) {
         return null;
       }
@@ -151,7 +151,7 @@ class RecipeService {
       console.error('Error getting recipe with cache:', error);
       // If external API fails, try to return cached data even if expired
       const cachedRecipe = await prisma.recipe.findUnique({
-        where: { externalId: recipeId }
+        where: { externalId: recipeId },
       });
 
       if (cachedRecipe) {
@@ -177,7 +177,7 @@ class RecipeService {
           instructions: recipeData.instructions,
           thumbnail: recipeData.thumbnail,
           ingredients: recipeData.ingredients,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         create: {
           externalId: recipeData.id,
@@ -186,8 +186,8 @@ class RecipeService {
           area: recipeData.area,
           instructions: recipeData.instructions,
           thumbnail: recipeData.thumbnail,
-          ingredients: recipeData.ingredients
-        }
+          ingredients: recipeData.ingredients,
+        },
       });
     } catch (error) {
       console.error('Error caching recipe:', error);
@@ -206,11 +206,11 @@ class RecipeService {
     for (let i = 1; i <= 20; i++) {
       const ingredient = meal[`strIngredient${i}`];
       const measure = meal[`strMeasure${i}`];
-      
+
       if (ingredient && ingredient.trim()) {
         ingredients.push({
           name: ingredient.trim(),
-          measure: measure ? measure.trim() : ''
+          measure: measure ? measure.trim() : '',
         });
       }
     }
@@ -222,10 +222,10 @@ class RecipeService {
       area: meal.strArea,
       instructions: meal.strInstructions,
       thumbnail: meal.strMealThumb,
-      tags: meal.strTags ? meal.strTags.split(',').map(tag => tag.trim()) : [],
+      tags: meal.strTags ? meal.strTags.split(',').map((tag) => tag.trim()) : [],
       youtube: meal.strYoutube,
       source: meal.strSource,
-      ingredients
+      ingredients,
     };
   }
 
@@ -244,7 +244,7 @@ class RecipeService {
       thumbnail: cachedRecipe.thumbnail,
       ingredients: cachedRecipe.ingredients,
       cached: true,
-      cachedAt: cachedRecipe.cachedAt
+      cachedAt: cachedRecipe.cachedAt,
     };
   }
 

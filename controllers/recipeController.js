@@ -11,12 +11,9 @@ const getRecipesByCategory = asyncHandler(async (req, res) => {
   const { limit = 20, offset = 0 } = req.query;
 
   const recipes = await recipeService.fetchRecipesByCategory(category);
-  
+
   // Apply pagination
-  const paginatedRecipes = recipes.slice(
-    parseInt(offset), 
-    parseInt(offset) + parseInt(limit)
-  );
+  const paginatedRecipes = recipes.slice(parseInt(offset), parseInt(offset) + parseInt(limit));
 
   res.status(200).json({
     success: true,
@@ -26,10 +23,10 @@ const getRecipesByCategory = asyncHandler(async (req, res) => {
         total: recipes.length,
         limit: parseInt(limit),
         offset: parseInt(offset),
-        hasMore: parseInt(offset) + parseInt(limit) < recipes.length
+        hasMore: parseInt(offset) + parseInt(limit) < recipes.length,
       },
-      category
-    }
+      category,
+    },
   });
 });
 
@@ -47,15 +44,15 @@ const getRecipeById = asyncHandler(async (req, res) => {
     return res.status(404).json({
       success: false,
       error: 'Recipe not found',
-      message: 'The requested recipe could not be found'
+      message: 'The requested recipe could not be found',
     });
   }
 
   res.status(200).json({
     success: true,
     data: {
-      recipe
-    }
+      recipe,
+    },
   });
 });
 
@@ -72,7 +69,7 @@ const searchRecipes = asyncHandler(async (req, res) => {
     return res.status(400).json({
       success: false,
       error: 'Missing search term',
-      message: 'Please provide a search term'
+      message: 'Please provide a search term',
     });
   }
 
@@ -80,17 +77,14 @@ const searchRecipes = asyncHandler(async (req, res) => {
     return res.status(400).json({
       success: false,
       error: 'Search term too short',
-      message: 'Search term must be at least 2 characters long'
+      message: 'Search term must be at least 2 characters long',
     });
   }
 
   const recipes = await recipeService.searchRecipes(searchTerm);
-  
+
   // Apply pagination
-  const paginatedRecipes = recipes.slice(
-    parseInt(offset), 
-    parseInt(offset) + parseInt(limit)
-  );
+  const paginatedRecipes = recipes.slice(parseInt(offset), parseInt(offset) + parseInt(limit));
 
   res.status(200).json({
     success: true,
@@ -100,10 +94,10 @@ const searchRecipes = asyncHandler(async (req, res) => {
         total: recipes.length,
         limit: parseInt(limit),
         offset: parseInt(offset),
-        hasMore: parseInt(offset) + parseInt(limit) < recipes.length
+        hasMore: parseInt(offset) + parseInt(limit) < recipes.length,
       },
-      searchTerm
-    }
+      searchTerm,
+    },
   });
 });
 
@@ -118,8 +112,8 @@ const getCategories = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     data: {
-      categories
-    }
+      categories,
+    },
   });
 });
 
@@ -135,15 +129,15 @@ const getRandomRecipe = asyncHandler(async (req, res) => {
     return res.status(404).json({
       success: false,
       error: 'No recipe found',
-      message: 'Could not fetch a random recipe'
+      message: 'Could not fetch a random recipe',
     });
   }
 
   res.status(200).json({
     success: true,
     data: {
-      recipe
-    }
+      recipe,
+    },
   });
 });
 
@@ -152,5 +146,5 @@ module.exports = {
   getRecipeById,
   searchRecipes,
   getCategories,
-  getRandomRecipe
+  getRandomRecipe,
 };

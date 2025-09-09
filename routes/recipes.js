@@ -4,7 +4,7 @@ const {
   getRecipeById,
   searchRecipes,
   getCategories,
-  getRandomRecipe
+  getRandomRecipe,
 } = require('../controllers/recipeController');
 const { validateCategory, validateRecipeId } = require('../middlewares/validation');
 const { optionalAuth } = require('../middlewares/auth');

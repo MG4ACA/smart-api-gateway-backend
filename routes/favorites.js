@@ -4,7 +4,7 @@ const {
   removeFavorite,
   getFavorites,
   checkFavorite,
-  getFavoriteStats
+  getFavoriteStats,
 } = require('../controllers/favoriteController');
 const { authenticateToken } = require('../middlewares/auth');
 const { validateRecipeId } = require('../middlewares/validation');

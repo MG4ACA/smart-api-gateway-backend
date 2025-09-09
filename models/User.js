@@ -28,7 +28,7 @@ class User {
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
+      where: { email: email.toLowerCase() },
     });
 
     if (existingUser) {
@@ -44,8 +44,8 @@ class User {
       data: {
         name: name.trim(),
         email: email.toLowerCase(),
-        password: hashedPassword
-      }
+        password: hashedPassword,
+      },
     });
 
     return user;
@@ -62,7 +62,7 @@ class User {
     }
 
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
+      where: { email: email.toLowerCase() },
     });
 
     return user;
@@ -82,9 +82,9 @@ class User {
       where: { id },
       include: {
         _count: {
-          select: { favorites: true }
-        }
-      }
+          select: { favorites: true },
+        },
+      },
     });
 
     return user;
@@ -115,7 +115,7 @@ class User {
     const filteredData = {};
 
     // Only allow specific fields to be updated
-    allowedFields.forEach(field => {
+    allowedFields.forEach((field) => {
       if (updateData[field] !== undefined) {
         filteredData[field] = updateData[field];
       }
@@ -135,8 +135,8 @@ class User {
       data: {
         ...filteredData,
         name: filteredData.name?.trim(),
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
     return user;
@@ -152,7 +152,7 @@ class User {
   static async changePassword(userId, currentPassword, newPassword) {
     // Get user
     const user = await prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
 
     if (!user) {
@@ -179,8 +179,8 @@ class User {
       where: { id: userId },
       data: {
         password: hashedPassword,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
     return updatedUser;
@@ -194,7 +194,7 @@ class User {
   static async deleteAccount(userId) {
     // Delete user (cascade will handle favorites)
     await prisma.user.delete({
-      where: { id: userId }
+      where: { id: userId },
     });
 
     return true;
@@ -211,12 +211,12 @@ class User {
       include: {
         favorites: {
           orderBy: { createdAt: 'desc' },
-          take: 5
+          take: 5,
         },
         _count: {
-          select: { favorites: true }
-        }
-      }
+          select: { favorites: true },
+        },
+      },
     });
 
     if (!user) {
@@ -227,7 +227,7 @@ class User {
       totalFavorites: user._count.favorites,
       recentFavorites: user.favorites,
       memberSince: user.createdAt,
-      lastUpdated: user.updatedAt
+      lastUpdated: user.updatedAt,
     };
   }
 
@@ -247,7 +247,7 @@ class User {
       email: user.email,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      favoritesCount: user._count?.favorites || 0
+      favoritesCount: user._count?.favorites || 0,
     };
   }
 }
