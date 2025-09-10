@@ -5,7 +5,7 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
-// Import routes
+// Import all route handlers (local services)
 const authRoutes = require('./routes/auth');
 const recipeRoutes = require('./routes/recipes');
 const favoriteRoutes = require('./routes/favorites');
@@ -14,7 +14,7 @@ const favoriteRoutes = require('./routes/favorites');
 const { errorHandler } = require('./middlewares/errorHandler');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 // Security middleware
 app.use(helmet());
@@ -32,8 +32,15 @@ app.use(limiter);
 // CORS configuration
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    origin: [
+      'http://localhost:3000', // Frontend development
+      'http://localhost:3001', // Alternative frontend port
+      process.env.FRONTEND_URL, // Production frontend URL
+    ].filter(Boolean),
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
   })
 );
 
@@ -51,34 +58,165 @@ app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    service: 'Smart API Gateway',
+    service: 'Smart Recipe API Gateway (Unified)',
     version: '1.0.0',
+    mode: 'Unified Gateway',
+    endpoints: {
+      auth: '/api/auth/*',
+      recipes: '/api/recipes/*',
+      favorites: '/api/favorites/*',
+    },
   });
 });
 
-// API routes
+// API Routes with /api prefix for frontend compatibility
 app.use('/api/auth', authRoutes);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/favorites', favoriteRoutes);
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Route not found',
-    message: `Cannot ${req.method} ${req.originalUrl}`,
+// User routes (basic user operations)
+app.get('/api/users/profile', require('./middlewares/auth').authenticateToken, (req, res) => {
+  res.json({
+    userId: req.user.userId,
+    email: req.user.email,
+    message: 'User profile retrieved successfully',
   });
 });
 
-// Global error handler
+// Dashboard aggregation endpoint
+app.get('/api/dashboard', require('./middlewares/auth').authenticateToken, async (req, res) => {
+  try {
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+
+    // Get user's favorites count
+    const favoritesCount = await prisma.favorite.count({
+      where: { userId: req.user.userId },
+    });
+
+    // Get recent favorites
+    const recentFavorites = await prisma.favorite.findMany({
+      where: { userId: req.user.userId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: {
+        id: true,
+        recipeId: true,
+        title: true,
+        createdAt: true,
+      },
+    });
+
+    await prisma.$disconnect();
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: req.user.userId,
+          email: req.user.email,
+        },
+        favorites: {
+          count: favoritesCount,
+          recent: recentFavorites,
+        },
+        message: 'Dashboard data retrieved successfully',
+      },
+    });
+  } catch (error) {
+    console.error('Dashboard error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve dashboard data',
+    });
+  }
+});
+
+// Search recipes with favorites status
+app.get('/api/search', require('./middlewares/auth').optionalAuth, async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    // Use the recipe service logic
+    const recipeService = require('./services/recipeService');
+    const recipes = await recipeService.searchRecipes(query);
+
+    // If user is authenticated, add favorite status
+    if (req.user) {
+      const { PrismaClient } = require('@prisma/client');
+      const prisma = new PrismaClient();
+
+      const favoriteRecipeIds = await prisma.favorite.findMany({
+        where: { userId: req.user.userId },
+        select: { recipeId: true },
+      });
+
+      const favoriteIds = favoriteRecipeIds.map((f) => f.recipeId);
+
+      recipes.forEach((recipe) => {
+        recipe.isFavorite = favoriteIds.includes(recipe.id.toString());
+      });
+
+      await prisma.$disconnect();
+    } else {
+      recipes.forEach((recipe) => {
+        recipe.isFavorite = false;
+      });
+    }
+
+    res.json({
+      success: true,
+      data: recipes,
+      query: query,
+    });
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to search recipes',
+    });
+  }
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Endpoint not found',
+    message: `Cannot ${req.method} ${req.originalUrl}`,
+    availableEndpoints: [
+      'GET /health',
+      'POST /api/auth/register',
+      'POST /api/auth/login',
+      'GET /api/auth/profile',
+      'GET /api/recipes/search',
+      'GET /api/recipes/:id',
+      'GET /api/favorites',
+      'POST /api/favorites',
+      'DELETE /api/favorites/:id',
+      'GET /api/dashboard',
+    ],
+  });
+});
+
+// Error handling middleware
 app.use(errorHandler);
 
 // Start server
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/health`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  });
-}
+app.listen(PORT, () => {
+  console.log(`🚀 Smart Recipe Gateway running on port ${PORT}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔄 Mode: Unified Gateway (All services integrated)`);
+  console.log(`\n🛠️  Available endpoints:`);
+  console.log(`   - Health: http://localhost:${PORT}/health`);
+  console.log(`   - Auth: http://localhost:${PORT}/api/auth/*`);
+  console.log(`   - Recipes: http://localhost:${PORT}/api/recipes/*`);
+  console.log(`   - Favorites: http://localhost:${PORT}/api/favorites/*`);
+  console.log(`   - Dashboard: http://localhost:${PORT}/api/dashboard`);
+  console.log(`   - Search: http://localhost:${PORT}/api/search`);
+});
 
 module.exports = app;

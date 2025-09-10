@@ -98,16 +98,16 @@ const validateLogin = (req, res, next) => {
  * @param {Function} next - Express next function
  */
 const validateRecipeId = (req, res, next) => {
-  const { recipeId } = req.params;
+  const { id } = req.params;
 
-  if (!recipeId) {
+  if (!id) {
     return res.status(400).json({
       error: 'Validation failed',
       message: 'Recipe ID is required',
     });
   }
 
-  if (typeof recipeId !== 'string' || recipeId.trim().length === 0) {
+  if (typeof id !== 'string' || id.trim().length === 0) {
     return res.status(400).json({
       error: 'Validation failed',
       message: 'Recipe ID must be a valid string',
