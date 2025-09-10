@@ -132,55 +132,6 @@ app.get('/api/dashboard', require('./middlewares/auth').authenticateToken, async
   }
 });
 
-// Search recipes with favorites status
-app.get('/api/search', require('./middlewares/auth').optionalAuth, async (req, res) => {
-  try {
-    const { query } = req.query;
-    if (!query) {
-      return res.status(400).json({ error: 'Search query is required' });
-    }
-
-    // Use the recipe service logic
-    const recipeService = require('./services/recipeService');
-    const recipes = await recipeService.searchRecipes(query);
-
-    // If user is authenticated, add favorite status
-    if (req.user) {
-      const { PrismaClient } = require('@prisma/client');
-      const prisma = new PrismaClient();
-
-      const favoriteRecipeIds = await prisma.favorite.findMany({
-        where: { userId: req.user.userId },
-        select: { recipeId: true },
-      });
-
-      const favoriteIds = favoriteRecipeIds.map((f) => f.recipeId);
-
-      recipes.forEach((recipe) => {
-        recipe.isFavorite = favoriteIds.includes(recipe.id.toString());
-      });
-
-      await prisma.$disconnect();
-    } else {
-      recipes.forEach((recipe) => {
-        recipe.isFavorite = false;
-      });
-    }
-
-    res.json({
-      success: true,
-      data: recipes,
-      query: query,
-    });
-  } catch (error) {
-    console.error('Search error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to search recipes',
-    });
-  }
-});
-
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({
@@ -216,7 +167,6 @@ app.listen(PORT, () => {
   console.log(`   - Recipes: http://localhost:${PORT}/api/recipes/*`);
   console.log(`   - Favorites: http://localhost:${PORT}/api/favorites/*`);
   console.log(`   - Dashboard: http://localhost:${PORT}/api/dashboard`);
-  console.log(`   - Search: http://localhost:${PORT}/api/search`);
 });
 
 module.exports = app;
