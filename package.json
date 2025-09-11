@@ -38,6 +38,7 @@
     "http-proxy-middleware": "^2.0.9",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "redis": "^5.8.2",
     "validator": "^13.11.0"
   },
   "devDependencies": {

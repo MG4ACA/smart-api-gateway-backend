@@ -1,12 +1,14 @@
 const axios = require('axios');
 const { PrismaClient } = require('@prisma/client');
+const redisClient = require('../config/redis');
 
 const prisma = new PrismaClient();
 
 class RecipeService {
   constructor() {
     this.baseURL = process.env.THEMEALDB_API_URL || 'https://www.themealdb.com/api/json/v1/1';
-    this.cacheTimeout = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    // Cache TTL in seconds (default 1 hour)
+    this.cacheTTL = parseInt(process.env.RECIPE_CACHE_TTL_SECONDS, 10) || 3600;
   }
 
   /**
@@ -15,7 +17,15 @@ class RecipeService {
    * @returns {Object} Recipe data
    */
   async fetchRecipeById(recipeId) {
+    const cacheKey = `recipe:${recipeId}`;
     try {
+      // Check cache first
+      const cached = await redisClient.get(cacheKey);
+      if (cached) {
+        // console.log(`CACHE HIT: ${cacheKey}`);
+        return JSON.parse(cached);
+      }
+
       const response = await axios.get(`${this.baseURL}/lookup.php?i=${recipeId}`);
 
       if (!response.data.meals || response.data.meals.length === 0) {
@@ -23,7 +33,16 @@ class RecipeService {
       }
 
       const meal = response.data.meals[0];
-      return this.transformMealData(meal);
+      const transformed = this.transformMealData(meal);
+
+      // Store in cache
+      try {
+        await redisClient.setEx(cacheKey, this.cacheTTL, JSON.stringify(transformed));
+      } catch (cacheErr) {
+        console.warn('Failed to set recipe cache:', cacheErr.message || cacheErr);
+      }
+
+      return transformed;
     } catch (error) {
       console.error('Error fetching recipe by ID:', error);
       throw new Error('Failed to fetch recipe from external API');
@@ -36,19 +55,34 @@ class RecipeService {
    * @returns {Array} Array of recipe data
    */
   async fetchRecipesByCategory(category) {
+    const cacheKey = `recipes:category:${String(category).toLowerCase()}`;
     try {
+      const cached = await redisClient.get(cacheKey);
+      if (cached) {
+        // console.log(`CACHE HIT: ${cacheKey}`);
+        return JSON.parse(cached);
+      }
+
       const response = await axios.get(`${this.baseURL}/filter.php?c=${category}`);
 
       if (!response.data.meals || response.data.meals.length === 0) {
         return [];
       }
 
-      return response.data.meals.map((meal) => ({
+      const result = response.data.meals.map((meal) => ({
         id: meal.idMeal,
         name: meal.strMeal,
         thumbnail: meal.strMealThumb,
         category: category,
       }));
+
+      try {
+        await redisClient.setEx(cacheKey, this.cacheTTL, JSON.stringify(result));
+      } catch (cacheErr) {
+        console.warn('Failed to set category cache:', cacheErr.message || cacheErr);
+      }
+
+      return result;
     } catch (error) {
       console.error('Error fetching recipes by category:', error);
       throw new Error('Failed to fetch recipes from external API');
@@ -61,14 +95,29 @@ class RecipeService {
    * @returns {Array} Array of recipe data
    */
   async searchRecipes(searchTerm) {
+    const cacheKey = `recipes:search:${String(searchTerm).toLowerCase()}`;
     try {
+      const cached = await redisClient.get(cacheKey);
+      if (cached) {
+        // console.log(`CACHE HIT: ${cacheKey}`);
+        return JSON.parse(cached);
+      }
+
       const response = await axios.get(`${this.baseURL}/search.php?s=${searchTerm}`);
 
       if (!response.data.meals || response.data.meals.length === 0) {
         return [];
       }
 
-      return response.data.meals.map((meal) => this.transformMealData(meal));
+      const result = response.data.meals.map((meal) => this.transformMealData(meal));
+
+      try {
+        await redisClient.setEx(cacheKey, this.cacheTTL, JSON.stringify(result));
+      } catch (cacheErr) {
+        console.warn('Failed to set search cache:', cacheErr.message || cacheErr);
+      }
+
+      return result;
     } catch (error) {
       console.error('Error searching recipes:', error);
       throw new Error('Failed to search recipes from external API');
@@ -80,19 +129,34 @@ class RecipeService {
    * @returns {Array} Array of categories
    */
   async getCategories() {
+    const cacheKey = 'recipes:categories';
     try {
+      const cached = await redisClient.get(cacheKey);
+      if (cached) {
+        // console.log(`CACHE HIT: ${cacheKey}`);
+        return JSON.parse(cached);
+      }
+
       const response = await axios.get(`${this.baseURL}/categories.php`);
 
       if (!response.data.categories) {
         return [];
       }
 
-      return response.data.categories.map((category) => ({
+      const result = response.data.categories.map((category) => ({
         id: category.idCategory,
         name: category.strCategory,
         thumbnail: category.strCategoryThumb,
         description: category.strCategoryDescription,
       }));
+
+      try {
+        await redisClient.setEx(cacheKey, this.cacheTTL, JSON.stringify(result));
+      } catch (cacheErr) {
+        console.warn('Failed to set categories cache:', cacheErr.message || cacheErr);
+      }
+
+      return result;
     } catch (error) {
       console.error('Error fetching categories:', error);
       throw new Error('Failed to fetch categories from external API');
