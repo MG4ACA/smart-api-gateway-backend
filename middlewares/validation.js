@@ -98,7 +98,8 @@ const validateLogin = (req, res, next) => {
  * @param {Function} next - Express next function
  */
 const validateRecipeId = (req, res, next) => {
-  const { id } = req.params;
+  // Support routes that use either `id` or `recipeId` as the param name
+  const id = req.params.id || req.params.recipeId;
 
   if (!id) {
     return res.status(400).json({
