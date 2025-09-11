@@ -161,12 +161,6 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔄 Mode: Unified Gateway (All services integrated)`);
-  console.log(`\n🛠️  Available endpoints:`);
-  console.log(`   - Health: http://localhost:${PORT}/health`);
-  console.log(`   - Auth: http://localhost:${PORT}/api/auth/*`);
-  console.log(`   - Recipes: http://localhost:${PORT}/api/recipes/*`);
-  console.log(`   - Favorites: http://localhost:${PORT}/api/favorites/*`);
-  console.log(`   - Dashboard: http://localhost:${PORT}/api/dashboard`);
 });
 
 module.exports = app;
