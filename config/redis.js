@@ -49,7 +49,10 @@ let redisClient;
     console.log('✅ Connected to Redis successfully!');
     redisClient = client;
   } catch (err) {
-    console.warn('⚠️ Could not connect to Redis, using in-memory fallback. Error:', err && err.message ? err.message : err);
+    console.warn(
+      '⚠️ Could not connect to Redis, using in-memory fallback. Error:',
+      err && err.message ? err.message : err
+    );
     redisClient = createInMemoryStore();
   }
 })();
